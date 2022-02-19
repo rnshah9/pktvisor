@@ -22,4 +22,4 @@ corrade/2020.06
 protobuf/3.17.1
 
 [options]
-pcapplusplus:immediate_mode=True
+#pcapplusplus:immediate_mode=True
