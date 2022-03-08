@@ -6,6 +6,12 @@
 
 namespace visor::handler::dhcp {
 
+static void _process_udp_packet_cb(pcpp::Packet &payload, PacketDirection dir, pcpp::ProtocolType l3, uint32_t flowkey, timespec stamp, void *cookie)
+{
+    auto t = static_cast<DhcpStreamHandler *>(cookie);
+    t->process_udp_packet_cb(payload, dir, l3, flowkey, stamp);
+}
+
 DhcpStreamHandler::DhcpStreamHandler(const std::string &name, InputStream *stream, const Configurable *window_config, StreamHandler *handler)
     : visor::StreamMetricsHandler<DhcpMetricsManager>(name, window_config)
 {
@@ -48,9 +54,9 @@ void DhcpStreamHandler::start()
     }
 
     if (_pcap_stream) {
-        _pkt_udp_connection = _pcap_stream->udp_signal.connect(&DhcpStreamHandler::process_udp_packet_cb, this);
-        _start_tstamp_connection = _pcap_stream->start_tstamp_signal.connect(&DhcpStreamHandler::set_start_tstamp, this);
-        _end_tstamp_connection = _pcap_stream->end_tstamp_signal.connect(&DhcpStreamHandler::set_end_tstamp, this);
+        _pcap_stream->udp_signal[_name] = {&_process_udp_packet_cb, this};
+        //        _start_tstamp_connection = _pcap_stream->start_tstamp_signal.connect(&DhcpStreamHandler::set_start_tstamp, this);
+        //        _end_tstamp_connection = _pcap_stream->end_tstamp_signal.connect(&DhcpStreamHandler::set_end_tstamp, this);
     }
 
     _running = true;
@@ -63,9 +69,9 @@ void DhcpStreamHandler::stop()
     }
 
     if (_pcap_stream) {
-        _pkt_udp_connection.disconnect();
-        _start_tstamp_connection.disconnect();
-        _end_tstamp_connection.disconnect();
+        _pcap_stream->udp_signal.erase(_name);
+        //        _start_tstamp_connection.disconnect();
+        //        _end_tstamp_connection.disconnect();
     }
 
     _running = false;

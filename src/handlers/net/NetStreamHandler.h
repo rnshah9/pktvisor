@@ -156,7 +156,6 @@ class NetStreamHandler final : public visor::StreamMetricsHandler<NetworkMetrics
 
     void process_sflow_cb(const SFSample &);
     void process_dnstap_cb(const dnstap::Dnstap &);
-    void process_packet_cb(pcpp::Packet &payload, PacketDirection dir, pcpp::ProtocolType l3, pcpp::ProtocolType l4, timespec stamp);
     void process_udp_packet_cb(pcpp::Packet &payload, PacketDirection dir, pcpp::ProtocolType l3, uint32_t flowkey, timespec stamp);
     void set_start_tstamp(timespec stamp);
     void set_end_tstamp(timespec stamp);
@@ -175,6 +174,7 @@ public:
     {
         return 0;
     }
+    void process_packet_cb(pcpp::Packet &payload, PacketDirection dir, pcpp::ProtocolType l3, pcpp::ProtocolType l4, timespec stamp);
 
     void start() override;
     void stop() override;

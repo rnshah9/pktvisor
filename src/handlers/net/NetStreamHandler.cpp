@@ -20,6 +20,12 @@
 
 namespace visor::handler::net {
 
+static void _process_packet_cb(pcpp::Packet &payload, PacketDirection dir, pcpp::ProtocolType l3, pcpp::ProtocolType l4, timespec stamp, void *cookie)
+{
+    auto t = static_cast<NetStreamHandler *>(cookie);
+    t->process_packet_cb(payload, dir, l3, l4, stamp);
+}
+
 NetStreamHandler::NetStreamHandler(const std::string &name, InputStream *stream, const Configurable *window_config, StreamHandler *handler)
     : visor::StreamMetricsHandler<NetworkMetricsManager>(name, window_config)
 {
@@ -61,9 +67,9 @@ void NetStreamHandler::start()
     }
 
     if (_pcap_stream) {
-        _pkt_connection = _pcap_stream->packet_signal.connect(&NetStreamHandler::process_packet_cb, this);
-        _start_tstamp_connection = _pcap_stream->start_tstamp_signal.connect(&NetStreamHandler::set_start_tstamp, this);
-        _end_tstamp_connection = _pcap_stream->end_tstamp_signal.connect(&NetStreamHandler::set_end_tstamp, this);
+        _pcap_stream->packet_signal.insert({_name, {&_process_packet_cb, this}});
+        //        _start_tstamp_connection = _pcap_stream->start_tstamp_signal.connect(&NetStreamHandler::set_start_tstamp, this);
+        //        _end_tstamp_connection = _pcap_stream->end_tstamp_signal.connect(&NetStreamHandler::set_end_tstamp, this);
     } else if (_dnstap_stream) {
         _dnstap_connection = _dnstap_stream->dnstap_signal.connect(&NetStreamHandler::process_dnstap_cb, this);
     } else if (_sflow_stream) {
@@ -82,9 +88,9 @@ void NetStreamHandler::stop()
     }
 
     if (_pcap_stream) {
-        _pkt_connection.disconnect();
-        _start_tstamp_connection.disconnect();
-        _end_tstamp_connection.disconnect();
+        _pcap_stream->packet_signal.erase(_name);
+        //        _start_tstamp_connection.disconnect();
+        //        _end_tstamp_connection.disconnect();
     } else if (_dnstap_stream) {
         _dnstap_connection.disconnect();
     } else if (_sflow_stream) {

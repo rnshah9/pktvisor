@@ -88,7 +88,6 @@ class DhcpStreamHandler final : public visor::StreamMetricsHandler<DhcpMetricsMa
     sigslot::connection _start_tstamp_connection;
     sigslot::connection _end_tstamp_connection;
 
-    void process_udp_packet_cb(pcpp::Packet &payload, PacketDirection dir, pcpp::ProtocolType l3, uint32_t flowkey, timespec stamp);
 
     void set_start_tstamp(timespec stamp);
     void set_end_tstamp(timespec stamp);
@@ -112,6 +111,7 @@ public:
 
     void start() override;
     void stop() override;
+    void process_udp_packet_cb(pcpp::Packet &payload, PacketDirection dir, pcpp::ProtocolType l3, uint32_t flowkey, timespec stamp);
 };
 
 }

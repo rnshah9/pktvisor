@@ -229,22 +229,22 @@ void PcapInputStream::stop()
 
 void PcapInputStream::tcp_message_ready(int8_t side, const pcpp::TcpStreamData &tcpData)
 {
-    tcp_message_ready_signal(side, tcpData);
+    // tcp_message_ready_signal(side, tcpData);
 }
 
 void PcapInputStream::tcp_connection_start(const pcpp::ConnectionData &connectionData)
 {
-    tcp_connection_start_signal(connectionData);
+    // tcp_connection_start_signal(connectionData);
 }
 
 void PcapInputStream::tcp_connection_end(const pcpp::ConnectionData &connectionData, pcpp::TcpReassembly::ConnectionEndReason reason)
 {
-    tcp_connection_end_signal(connectionData, reason);
+    // tcp_connection_end_signal(connectionData, reason);
 }
 
 void PcapInputStream::process_pcap_stats(const pcpp::IPcapDevice::PcapStats &stats)
 {
-    pcap_stats_signal(stats);
+    // pcap_stats_signal(stats);
 }
 
 void PcapInputStream::_generate_mock_traffic()
@@ -313,8 +313,12 @@ void PcapInputStream::_generate_mock_traffic()
     pcpp::ProtocolType l4 = pcpp::UDP;
     timespec ts;
     timespec_get(&ts, TIME_UTC);
-    packet_signal(packet, dir, l3, l4, ts);
-    udp_signal(packet, dir, l3, pcpp::hash5Tuple(&packet), ts);
+    for (const auto &[module, cb_pair] : packet_signal) {
+        cb_pair.first(packet, dir, l3, l4, ts, cb_pair.second);
+    }
+    for (const auto &[module, cb_pair] : udp_signal) {
+        cb_pair.first(packet, dir, l3, pcpp::hash5Tuple(&packet), ts, cb_pair.second);
+    }
 }
 
 void PcapInputStream::process_raw_packet(pcpp::RawPacket *rawPacket)
@@ -360,17 +364,21 @@ void PcapInputStream::process_raw_packet(pcpp::RawPacket *rawPacket)
     }
 
     // interface to handlers
-    packet_signal(packet, dir, l3, l4, rawPacket->getPacketTimeStamp());
+    for (const auto &[module, cb_pair] : packet_signal) {
+        cb_pair.first(packet, dir, l3, l4, rawPacket->getPacketTimeStamp(), cb_pair.second);
+    }
 
     if (l4 == pcpp::UDP) {
-        udp_signal(packet, dir, l3, pcpp::hash5Tuple(&packet), rawPacket->getPacketTimeStamp());
+        for (const auto &[module, cb_pair] : udp_signal) {
+            cb_pair.first(packet, dir, l3, pcpp::hash5Tuple(&packet), rawPacket->getPacketTimeStamp(), cb_pair.second);
+        }
     } else if (l4 == pcpp::TCP) {
         auto result = _tcp_reassembly.reassemblePacket(packet);
         switch (result) {
         case pcpp::TcpReassembly::Error_PacketDoesNotMatchFlow:
         case pcpp::TcpReassembly::NonTcpPacket:
         case pcpp::TcpReassembly::NonIpPacket:
-            tcp_reassembly_error_signal(packet, dir, l3, rawPacket->getPacketTimeStamp());
+            // tcp_reassembly_error_signal(packet, dir, l3, rawPacket->getPacketTimeStamp());
         case pcpp::TcpReassembly::TcpMessageHandled:
         case pcpp::TcpReassembly::OutOfOrderTcpMessageBuffered:
         case pcpp::TcpReassembly::FIN_RSTWithNoData:
@@ -408,7 +416,7 @@ void PcapInputStream::_open_pcap(const std::string &fileName, const std::string 
 
     // setup initial timestamp from first packet to initiate bucketing
     if (reader->getNextPacket(rawPacket)) {
-        start_tstamp_signal(rawPacket.getPacketTimeStamp());
+        // start_tstamp_signal(rawPacket.getPacketTimeStamp());
         process_raw_packet(&rawPacket);
     }
 
@@ -424,7 +432,7 @@ void PcapInputStream::_open_pcap(const std::string &fileName, const std::string 
         lastCount++;
         end_tstamp = rawPacket.getPacketTimeStamp();
     }
-    end_tstamp_signal(end_tstamp);
+    // end_tstamp_signal(end_tstamp);
     t0->cancel();
     std::cerr << "processed " << packetCount << " packets\n";
 

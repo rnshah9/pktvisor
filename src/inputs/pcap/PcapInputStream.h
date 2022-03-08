@@ -40,6 +40,17 @@ enum class PacketDirection {
 class PcapInputStream : public visor::InputStream
 {
 
+public:
+    typedef void (*UdpCB)(pcpp::Packet &, PacketDirection, pcpp::ProtocolType, uint32_t, timespec, void *cookie);
+    typedef void (*PacketCB)(pcpp::Packet &, PacketDirection, pcpp::ProtocolType, pcpp::ProtocolType, timespec, void *cookie);
+    //    inline void start_tstamp_signal(timespec);
+    //    inline void end_tstamp_signal(timespec);
+    //    inline void tcp_message_ready_signal(int8_t, const pcpp::TcpStreamData &);
+    //    inline void tcp_connection_start_signal(const pcpp::ConnectionData &);
+    //    inline void tcp_connection_end_signal(const pcpp::ConnectionData &, pcpp::TcpReassembly::ConnectionEndReason);
+    //    inline void tcp_reassembly_error_signal(pcpp::Packet &, PacketDirection, pcpp::ProtocolType, timespec);
+    //    inline void pcap_stats_signal(const pcpp::IPcapDevice::PcapStats &);
+
 private:
     static const PcapSource DefaultPcapSource = PcapSource::libpcap;
 
@@ -87,7 +98,7 @@ public:
     void info_json(json &j) const override;
     size_t consumer_count() const override
     {
-        return packet_signal.slot_count() + udp_signal.slot_count() + start_tstamp_signal.slot_count() + tcp_message_ready_signal.slot_count() + tcp_connection_start_signal.slot_count() + tcp_connection_end_signal.slot_count() + tcp_reassembly_error_signal.slot_count() + pcap_stats_signal.slot_count();
+        return udp_signal.size() + packet_signal.size();
     }
 
     // utilities
@@ -100,18 +111,8 @@ public:
     void tcp_connection_start(const pcpp::ConnectionData &connectionData);
     void tcp_connection_end(const pcpp::ConnectionData &connectionData, pcpp::TcpReassembly::ConnectionEndReason reason);
 
-    // handler functionality
-    // IF THIS changes, see consumer_count()
-    // note: these are mutable because consumer_count() calls slot_count() which is not const (unclear if it could/should be)
-    mutable sigslot::signal<pcpp::Packet &, PacketDirection, pcpp::ProtocolType, pcpp::ProtocolType, timespec> packet_signal;
-    mutable sigslot::signal<pcpp::Packet &, PacketDirection, pcpp::ProtocolType, uint32_t, timespec> udp_signal;
-    mutable sigslot::signal<timespec> start_tstamp_signal;
-    mutable sigslot::signal<timespec> end_tstamp_signal;
-    mutable sigslot::signal<int8_t, const pcpp::TcpStreamData &> tcp_message_ready_signal;
-    mutable sigslot::signal<const pcpp::ConnectionData &> tcp_connection_start_signal;
-    mutable sigslot::signal<const pcpp::ConnectionData &, pcpp::TcpReassembly::ConnectionEndReason> tcp_connection_end_signal;
-    mutable sigslot::signal<pcpp::Packet &, PacketDirection, pcpp::ProtocolType, timespec> tcp_reassembly_error_signal;
-    mutable sigslot::signal<const pcpp::IPcapDevice::PcapStats &> pcap_stats_signal;
+    std::unordered_map<std::string, std::pair<UdpCB, void *>> udp_signal;
+    std::unordered_map<std::string, std::pair<PacketCB, void *>> packet_signal;
 };
 
 }

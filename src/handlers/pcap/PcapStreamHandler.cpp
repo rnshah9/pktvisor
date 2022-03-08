@@ -32,11 +32,11 @@ void PcapStreamHandler::start()
     }
 
     if (_pcap_stream) {
-        _start_tstamp_connection = _pcap_stream->start_tstamp_signal.connect(&PcapStreamHandler::set_start_tstamp, this);
-        _end_tstamp_connection = _pcap_stream->end_tstamp_signal.connect(&PcapStreamHandler::set_end_tstamp, this);
+        //        _start_tstamp_connection = _pcap_stream->start_tstamp_signal.connect(&PcapStreamHandler::set_start_tstamp, this);
+        //        _end_tstamp_connection = _pcap_stream->end_tstamp_signal.connect(&PcapStreamHandler::set_end_tstamp, this);
 
-        _pcap_tcp_reassembly_errors_connection = _pcap_stream->tcp_reassembly_error_signal.connect(&PcapStreamHandler::process_pcap_tcp_reassembly_error, this);
-        _pcap_stats_connection = _pcap_stream->pcap_stats_signal.connect(&PcapStreamHandler::process_pcap_stats, this);
+        //        _pcap_tcp_reassembly_errors_connection = _pcap_stream->tcp_reassembly_error_signal.connect(&PcapStreamHandler::process_pcap_tcp_reassembly_error, this);
+        //        _pcap_stats_connection = _pcap_stream->pcap_stats_signal.connect(&PcapStreamHandler::process_pcap_stats, this);
     }
 
     _running = true;
@@ -49,10 +49,10 @@ void PcapStreamHandler::stop()
     }
 
     if (_pcap_stream) {
-        _start_tstamp_connection.disconnect();
-        _end_tstamp_connection.disconnect();
-        _pcap_tcp_reassembly_errors_connection.disconnect();
-        _pcap_stats_connection.disconnect();
+        //        _start_tstamp_connection.disconnect();
+        //        _end_tstamp_connection.disconnect();
+        //        _pcap_tcp_reassembly_errors_connection.disconnect();
+        //        _pcap_stats_connection.disconnect();
     }
 
     _running = false;
