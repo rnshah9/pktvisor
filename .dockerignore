@@ -1,9 +1,4 @@
-cmake-build*
-integration_tests/external*
-Dockerfile
-.dockerignore
-.gitignore
-appimage/Dockerfile.part
-appimage/export.sh
-appimage/Makefile
-localconfig/*
+Dockerfile*
+Mayhemfile
+.github/
+
